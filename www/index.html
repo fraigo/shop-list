@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <link rel='shortcut icon' type='image/vnd.microsoft.icon' href='img/icon.ico'> <!-- IE -->
+    <link rel='shortcut icon' type='image/png' href='img/icon.png'> 
+    <link rel='icon' type='image/png' href='img/icon.png'>
+    <script src="https://fraigo.github.io/firebug-lite/firebug-lite.js"></script>
+    <title>App</title>
+    <style>
+        html *{
+            box-sizing: border-box;
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        body{
+            padding:0;
+            margin: 0;
+        }
+        #app{
+            min-height: 100vh;
+        }
+        #app *{
+            -webkit-user-select: none;
+            user-select: none;
+        }
+        #app input{
+            -webkit-user-select: all;
+            user-select: all;
+        }
+        
+    </style>
+    <link href="material-icons/material-icons.css" rel="stylesheet">
+    <!--
+    <script src="firebug/firebug-lite-compressed.js"></script>
+    <link href="firebug/firebug-lite.css"
+    rel="stylesheet">
+    -->
+</head>
+<body>
+    <div id="app">
+        <div :is="appLayout" id="applayout">
+            
+        </div>
+    </div>
+    <script src="cordova.js"></script>
+    <script src="vue.js"></script>
+    <script src="app.js?20210420"></script>
+</body>
+</html>

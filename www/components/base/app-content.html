@@ -1,0 +1,156 @@
+<!-- text-template -->
+<script type="text/x-template" id="app-content-template">
+    <div class="app-content" :id="id">
+        <form class="input-container" >
+            <input autofocus type="text" ref="input" value="">
+            <span class="material-icons clear-icon" @click="clear()">clear</span>
+            <button @click="add()">Add</button>
+        </form>
+        <div class="item-container">
+            <div class="item" v-for="(item,idx) in currentItems" >
+                <span>{{item.label}}</span>
+                <span class="material-icons" @click="remove(idx)">delete</span>
+            </div>
+            <div v-if="currentItems.length==0">No items</div>
+        </div>
+    </div>
+</script>
+<script type="text/javascript">
+Vue.component('app-content', {
+    template: '#app-content-template',
+    data: function(){
+        return {
+            items: [],
+            newItem: {
+                label: ''
+            },
+        }
+    },
+    props: { 
+        "id" : {
+            "type" : String,
+            "default": "comp"+Math.round(Math.random()*10000)
+        },
+        "sorted" : {
+            "type" : Boolean
+        }
+    },
+    mounted:function(){
+        console.log("app-content mounted");
+        var self = this;
+        var itemData = localStorage.getItem('shoppingcart1')
+        if (itemData && itemData != '') {
+            this.items = JSON.parse(itemData)
+        }
+        this.$refs.input.focus()
+        window.cont = this
+    },
+    methods: {
+        add: function () {
+            var newItem = JSON.parse(JSON.stringify(this.newItem))
+            if (newItem.label.trim() == '') {
+                this.clear()
+                return
+            }
+            newItem.label = newItem.label[0].toUpperCase() + newItem.label.substring(1)
+            var foundIdx = -1
+            var found = this.items.filter(function (item, idx) {
+                var itemFound = item.label.toLowerCase() == newItem.label.toLowerCase()
+                if (itemFound) {
+                    foundIdx = idx
+                }
+                return itemFound
+            })
+            if (found.length == 0) {
+                this.items.push(newItem)
+            } else {
+                this.items[foundIdx]=newItem
+            }
+            this.clear()
+            this.save()
+        },
+        save: function () {
+            localStorage.setItem('shoppingcart1', JSON.stringify(this.items))
+        },
+        clear: function () {
+            this.newItem.label=''
+            this.$refs.input.focus()
+        },
+        remove: function (idx) {
+            this.items.splice(idx, 1)
+            this.save()
+        },
+        keydown: function (ev) {
+            if (ev.keyCode == 13) {
+                this.add()
+            }
+        }
+    },
+    computed:{
+        currentItems: function () {
+            if (this.sorted) {
+                var items = JSON.parse(JSON.stringify(this.items))
+                return items.sort(function (a, b){
+                    if (a.label>b.label) return 1
+                    if (a.label<b.label) return -1
+                    return 0
+                })
+            } else {
+                return this.items
+            }
+        }
+    }
+});
+</script>
+<style>
+.app-content{
+    flex: 1;
+    margin-top: 50px;
+    padding: 8px 12px;
+}
+*[inactive='true']{
+    opacity: 0.4;
+}
+.input-container{
+    display: flex;
+    align-items: center;
+
+}
+.input-container input, .input-container button{
+    height: 40px;
+    line-height: 40px;
+    padding: 0 12px;
+    border-radius: 3px;
+    border: 1px solid #eee;
+}
+.input-container input{
+    flex: 1;
+    font-size: 16px;
+}
+.input-container button{
+    margin-left: 8px;
+    background-color: #ddd;
+    font-size: 18px;
+}
+.clear-icon{
+    position: relative;
+    right: 35px;
+    margin-right: -30px;
+}
+.item-container{
+    margin: 20px 0;
+}
+.item-container .item{
+    display: inline-flex;
+    background-color: #eee;
+    padding: 6px;
+    border-radius: 4px;
+    align-items: center;
+    margin-right: 8px;
+    margin-bottom: 8px;
+}
+.item-container .item .material-icons{
+    font-size: 22px;
+    padding-left: 8px;
+}
+</style>

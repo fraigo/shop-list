@@ -1,0 +1,191 @@
+<!-- text-template -->
+<script type="text/x-template" id="app-layout-template">
+    <div class="app-layout" :id="id">
+        <div class="app-header">
+            <div class="app-toolbar">
+                <div class="app-menu" v-if="menu">
+                    <span class="material-icons" @click="showPlaylists()">menu</span>
+                </div>
+                <div class="app-title">Shopping Cart</div>
+                <div class="app-buttons">
+                    <div><span class="material-icons" :inactive="!sorted" @click="sorted=!sorted">sort_by_alpha</span></div>
+                </div>
+            </div>
+        </div>
+        <div is="app-content" :sorted="sorted"></div>
+        <div class="app-message" id="app-message"></div>
+        <div class="app-footer"></div>
+    </div>
+</script>
+<script type="text/javascript">
+
+    var errorHandler=function(err){
+        console.error(err);
+        //alert(err);
+    }
+    window.addEventListener("error",errorHandler);
+    Vue.config.errorHandler = errorHandler;
+    
+    window.messageTimeout = null;
+    window.showMessage = function(msg){
+        var el = document.getElementById('app-message');
+        el.innerHTML = msg;
+        el.className='app-message visible';
+        window.messageTimeout = setTimeout(function(){
+            el.innerHTML='';
+            el.className='app-message';
+        },5000)
+    }
+    
+    Vue.component('app-layout', {
+        template: '#app-layout-template',
+        data: function(){
+            return {
+                menu: false,
+                sorted: false
+            }
+        },
+        props: { 
+            "id" : {
+                "type" : String,
+                "default": "comp"+Math.round(Math.random()*10000)
+            },
+        },
+        created:function(){
+            var self = this
+            var keyUpHandler = function(evt) {
+            }
+            window.addEventListener('keyup', keyUpHandler);        
+        },
+        mounted:function(){
+            window.app=this;
+            var self = this;
+            var applayout=document.getElementById('applayout');
+            applayout.addEventListener("scroll",function(ev){
+                var scrollTop = applayout.scrollTop;
+                var isScrolling = document.body.getAttribute("scrolling")==1;
+                var limit=60;
+                if (isScrolling){
+                    limit=2;
+                }
+                if (scrollTop>limit){
+                    document.body.setAttribute("scrolling",1);
+                }else{
+                    document.body.setAttribute("scrolling",0);
+                }
+            })
+        },
+        methods: {
+            
+        },
+        computed:{
+        }
+    });
+</script>
+<style>
+.app-layout{
+    margin: 0;
+    border: 0;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    font-size: 18px;
+    height: 100vh;
+    overflow: auto;
+    -webkit-overflow-scrolling: touch;
+}
+.app-menu{
+    padding-right: 8px;
+    cursor: pointer;
+}
+.app-header{
+    width: 100%;
+    position: -webkit-sticky;
+    position: -moz-sticky;
+    position: -o-sticky;
+    position: -ms-sticky;
+    position: fixed;
+    top: -2px;
+    z-index: 10;
+}
+.app-toolbar{
+    display: flex;
+    line-height: 32px;
+    padding: 8px 12px;
+}
+body[scrolling='1'] .player-top{
+    padding-bottom: 4px;
+}
+.app-toolbar div{
+    display: flex;
+    align-items: center;
+}
+.app-toolbar .app-title{
+    flex-basis: 50%;
+}
+.app-buttons{
+    display: flex;
+    justify-content: flex-end;
+    flex: 1;
+}
+.app-buttons > div{
+    margin-left: 8px;
+    margin-right: 4px;
+    cursor: pointer;
+}
+.app-message{
+    position: fixed;
+    left: 0;
+    top: 90%;
+    margin: 0 3%;
+    width: 94%;
+    border-radius: 7px;
+    max-width: 640px;
+    padding: 12px;
+    text-align: center;
+    font-size: 16px;
+    background-color: rgba(0,0,0,0.7);
+    color: #fff;
+    display: none;
+    z-index: 10;
+}
+.app-message.visible{
+    display: block;
+}
+.app-popup{
+    display: none;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100vh;
+    position: fixed;
+    background-color: rgba(0,0,0,0.5);
+    top: 0;
+    left: 0;
+    z-index: 20;
+}
+.close-popup{
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    color: #fff;
+}
+.app-popup-content{
+    background-color: #047;
+    padding: 8px;
+    width: 400px;
+    height: 600px;
+    max-width: 98vw;
+    max-height: 85vh;
+    display: flex;
+    flex-direction: column;
+    border-radius: 5px;
+    position: relative;
+}
+
+@media (max-width:480px){
+    .app-message{
+        font-size: 14px;
+    }
+}
+</style>

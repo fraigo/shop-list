@@ -1,0 +1,32 @@
+<!-- text-template -->
+<script type="text/x-template" id="debug-component-template">
+    <div v-if="isDebug" class="debug-component" ><slot></slot></div>
+</script>
+<style>
+.debug-component{
+    font-size: 8px;
+    line-height: 1.2em;
+    max-width: 100vw;
+    overflow: hidden;
+    background-color: #ff8;
+    color: #444;
+    border: 1px solid #444;
+}
+</style>
+<script type="text/javascript">
+Vue.component('debug', {
+    template: '#debug-component-template',
+    mounted:function(){
+        console.log("debug-component mounted");
+        var self = this;
+    },
+    methods: {
+        
+    },
+    computed:{
+        isDebug: function(){
+            return false;
+        }
+    }
+});
+</script>

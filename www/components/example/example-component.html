@@ -1,0 +1,36 @@
+<!-- text-template -->
+<script type="text/x-template" id="example-component-template">
+    <div class="example-component" :id="id"><slot></slot></div>
+</script>
+<style>
+.example-component{
+    font-size: 16px;
+    line-height: 1.5em;
+}
+</style>
+<script type="text/javascript">
+Vue.component('example-component', {
+    template: '#example-component-template',
+    data: function(){
+        return {
+            zoom : 1
+        }
+    },
+    props: { 
+        "id" : {
+            "type" : String,
+            "default": "comp"+Math.round(Math.random()*10000)
+        },
+    },
+    mounted:function(){
+        console.log("example-component mounted");
+        var self = this;
+    },
+    methods: {
+        
+    },
+    computed:{
+        
+    }
+});
+</script>
