@@ -6,7 +6,7 @@
     <link rel='shortcut icon' type='image/vnd.microsoft.icon' href='img/icon.ico'> <!-- IE -->
     <link rel='shortcut icon' type='image/png' href='img/icon.png'> 
     <link rel='icon' type='image/png' href='img/icon.png'>
-    <script src="https://fraigo.github.io/firebug-lite/firebug-lite.js"></script>
+    <!--<script src="https://fraigo.github.io/firebug-lite/firebug-lite.js"></script>-->
     <title>App</title>
     <style>
         html *{
@@ -20,15 +20,14 @@
         #app{
             min-height: 100vh;
         }
-        #app *{
+        #app input{
             -webkit-user-select: none;
             user-select: none;
         }
-        #app input{
-            -webkit-user-select: all;
-            user-select: all;
+        input{
+            -webkit-user-select: text !important;
+            user-select: text !important;
         }
-        
     </style>
     <link href="material-icons/material-icons.css" rel="stylesheet">
     <!--
@@ -40,7 +39,6 @@
 <body>
     <div id="app">
         <div :is="appLayout" id="applayout">
-            
         </div>
     </div>
     <script src="cordova.js"></script>

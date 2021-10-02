@@ -1,2 +1,3 @@
 .DS_Store
 appengine
+appengine/cordova/platforms/ios/www

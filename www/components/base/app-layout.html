@@ -8,11 +8,12 @@
                 </div>
                 <div class="app-title">Shopping Cart</div>
                 <div class="app-buttons">
-                    <div><span class="material-icons" :inactive="!sorted" @click="sorted=!sorted">sort_by_alpha</span></div>
+                    <div><span class="material-icons" v-if="actions.length" @click="undo()" :title="'Undo '+actions[actions.length-1].action">undo</span></div>
+                    <div><span class="material-icons" :inactive="!sorted" title="Sort items" @click="sorted=!sorted">sort_by_alpha</span></div>
                 </div>
             </div>
         </div>
-        <div is="app-content" :sorted="sorted"></div>
+        <div is="app-content" :items="items" :actions="actions" @action="this.actions=$event" ref="content" :sorted="sorted"></div>
         <div class="app-message" id="app-message"></div>
         <div class="app-footer"></div>
     </div>
@@ -42,7 +43,9 @@
         data: function(){
             return {
                 menu: false,
-                sorted: false
+                sorted: false,
+                items: [],
+                actions: []
             }
         },
         props: { 
@@ -74,11 +77,19 @@
                     document.body.setAttribute("scrolling",0);
                 }
             })
+            var itemData = localStorage.getItem('shoppingcart1')
+            if (itemData && itemData != '') {
+                this.items = JSON.parse(itemData)
+            }
+            var itemActions = localStorage.getItem('shoppingcart_actions')
+            if (itemActions && itemActions != '') {
+                this.actions = JSON.parse(itemActions)
+            }
         },
         methods: {
-            
-        },
-        computed:{
+            undo: function () {
+                console.log(this.$refs.content.undo())
+            }
         }
     });
 </script>
