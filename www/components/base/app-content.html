@@ -9,12 +9,11 @@
         <div class="item-container">
             <transition-group name="itemlist">
             <div class="item" v-for="(item,idx) in sortedItems" :key="item.id">
-                <span>{{item.id}}   {{item.label}}</span>
+                <span>{{item.label}}</span>
                 <span class="material-icons delete-icon" @click="remove(item.id)">delete</span>
             </div>
             </transition-group>
             <div v-if="currentItems.length==0">No items</div>
-            {{nextIndex}}
         </div>
     </div>
 </script>
