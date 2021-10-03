@@ -3,7 +3,7 @@
     <div class="app-content" :id="id">
         <div class="input-container" >
             <input autofocus @paste="paste($event)" type="text" ref="input" @keyup="keyup($event)" v-model="newItem.label" >
-            <span v-if="newItem.label.length" class="material-icons clear-icon" @click="clear()">clear</span>
+            <span v-if="newItem.label.length>0" class="material-icons clear-icon" @click="clear()">clear</span>
             <button @click="add(newItem)">Add</button>
         </div>
         <div class="item-container">
@@ -231,6 +231,7 @@ Vue.component('app-content', {
     right: 35px;
     margin-right: -30px;
     cursor: pointer;
+    color: #222;
 }
 .delete-icon{
     cursor: pointer;
