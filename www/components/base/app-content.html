@@ -2,18 +2,18 @@
 <script type="text/x-template" id="app-content-template">
     <div class="app-content" :id="id">
         <div class="input-container" >
-            <input autofocus type="text" ref="input" @keyup="keyup($event)" v-model="newItem.label" >
-            <span class="material-icons clear-icon" @click="clear()">clear</span>
+            <input autofocus @paste="paste($event)" type="text" ref="input" @keyup="keyup($event)" v-model="newItem.label" >
+            <span v-if="newItem.label.length" class="material-icons clear-icon" @click="clear()">clear</span>
             <button @click="add(newItem)">Add</button>
         </div>
         <div class="item-container">
             <transition-group name="itemlist">
-            <div class="item" v-for="(item,idx) in sortedItems" :key="item.id">
+            <div class="item" v-for="(item,idx) in sortedItems" :key="item.id" :replaced="item.replaced">
                 <span>{{item.label}}</span>
                 <span class="material-icons delete-icon" @click="remove(item.id)">delete</span>
             </div>
+            <div v-if="currentItems.length==0" :key="currentItems.length">No items</div>
             </transition-group>
-            <div v-if="currentItems.length==0">No items</div>
         </div>
     </div>
 </script>
@@ -48,7 +48,7 @@ Vue.component('app-content', {
         }
     },
     mounted:function(){
-        console.log("app-content mounted");
+        document.title = "ShopList"
         var self = this;
         self.currentActions = this.actions;
         self.loadIndex(this.items)
@@ -70,9 +70,22 @@ Vue.component('app-content', {
                 }
             }
         },
+        
         newAction: function (data){
             this.currentActions.push(data)
             this.$emit('action', this.currentActions)
+        },
+        paste: function(event){
+            var textLines = event.clipboardData.getData('text/plain').split('\n')
+            for(var idx in textLines){
+                var item = textLines[idx]
+                console.log('adding', item)
+                this.add({label:item})
+            }
+            var self = this
+            setTimeout(function(){
+                self.clear()
+            }, 500)
         },
         add: function (itemIn, undo) {
             var newItem = JSON.parse(JSON.stringify(itemIn))
@@ -82,13 +95,6 @@ Vue.component('app-content', {
             }
             newItem.id = this.nextIndex
             this.nextIndex++
-            if (!undo){
-                this.newAction({
-                    action: 'add',
-                    id: newItem.id
-                })
-            }
-
             newItem.label = newItem.label[0].toUpperCase() + newItem.label.substring(1)
             var foundIdx = -1
             var found = this.currentItems.filter(function (item, idx) {
@@ -100,19 +106,29 @@ Vue.component('app-content', {
             })
             if (found.length == 0) {
                 this.currentItems.push(newItem)
+                if (!undo){
+                    this.newAction({
+                        action: 'add',
+                        id: newItem.id
+                    })
+                }
             } else {
-                this.currentItems[foundIdx]=newItem
+                var foundItem = this.currentItems[foundIdx]
+                foundItem.replaced = true
+                var self=this
+                setTimeout(function(item) {
+                    item.replaced = false
+                    self.save()
+                    self.$forceUpdate()
+                },300, foundItem)
             }
             this.clear()
-            this.save()
         },
         undo: function () {
-            console.log('lastact', this.currentActions.length)
             if (this.currentActions.length == 0) {
                 return
             }
             var lastAction = this.currentActions.pop()
-            console.log('lastact', lastAction)
             if (lastAction.action == 'remove') {
                 this.add({label:lastAction.text}, true)
             }
@@ -129,14 +145,12 @@ Vue.component('app-content', {
             this.$refs.input.focus()
         },
         remove: function (id, undo) {
-            console.log('delete', id)
             var idx = -1
             var items = this.currentItems.filter(function(item, index){ 
                 if (item.id==id) idx = index;
                 return item.id==id; 
             });
             if (idx>-1){
-                console.log('found', items[0], idx)
                 if (!undo) {
                     this.newAction({
                         action: 'remove',
@@ -169,11 +183,9 @@ Vue.component('app-content', {
     },
     watch:{
         actions: function (newItem) {
-            console.log('newaction', newItem)
             this.currentActions = newItem
         },
         items: function (newItem) {
-            console.log('newitem', newItem)
             this.loadIndex(newItem)
         }
     }
@@ -183,11 +195,14 @@ Vue.component('app-content', {
 <style>
 .app-content{
     flex: 1;
-    margin-top: 50px;
+    margin-top: 1.6em;
     padding: 8px 12px;
 }
 *[inactive='true']{
     opacity: 0.4;
+}
+.material-icons{
+    font-size: 1em;
 }
 .input-container{
     display: flex;
@@ -195,25 +210,27 @@ Vue.component('app-content', {
 
 }
 .input-container input, .input-container button{
-    height: 40px;
-    line-height: 40px;
+    height: 44px;
+    line-height: 44px;
     padding: 0 12px;
     border-radius: 3px;
     border: 1px solid #eee;
 }
 .input-container input{
     flex: 1;
+    outline: none;
     font-size: 16px;
 }
 .input-container button{
     margin-left: 8px;
     background-color: #ddd;
-    font-size: 18px;
+    font-size: 1em;
 }
 .clear-icon{
     position: relative;
     right: 35px;
     margin-right: -30px;
+    cursor: pointer;
 }
 .delete-icon{
     cursor: pointer;
@@ -224,18 +241,23 @@ Vue.component('app-content', {
 .item-container .item{
     display: inline-flex;
     background-color: #eee;
+    color: #222;
     padding: 6px;
     border-radius: 4px;
     align-items: center;
     margin-right: 8px;
     margin-bottom: 8px;
 }
+.item-container .item[replaced='true']{
+    font-weight: bold;
+    background-color: #ffffcc;
+}
 .item-container .item .material-icons{
-    font-size: 22px;
+    font-size: 1.2em;
     padding-left: 8px;
 }
 .itemlist-enter-active, .itemlist-leave-active {
-  transition: opacity .5s;
+  transition: opacity .3s;
 }
 .itemlist-enter, .itemlist-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;

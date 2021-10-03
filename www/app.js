@@ -43,7 +43,6 @@ var loadData=function(url,callback, error){
     var req = new XMLHttpRequest();
     req.open('GET', url, true);
     req.onreadystatechange = function (aEvt) {
-        //console.log("state",req.readyState);
         if (req.readyState == 4) {
             if(req.status == 200){
                 callback(req.responseText);
@@ -88,16 +87,14 @@ var vueData={
         },0)
     },
     mounted:function(){
-        console.log("mounted",this.contents);
+        console.log("mounted");
     },
     methods: {
         loadComponents:function(list,callback, pos){
-            // console.log('loadComponents');
             var self = this;
             if (!pos){
                 pos=0;
             }
-            // console.log("Loading",pos,list[pos]);
             if (!list[pos]){
                 callback(pos);
                 return;
@@ -109,7 +106,6 @@ var vueData={
         loadComponent:function(id, callback){
             var suffix = '?' + (new Date()).getTime();
             loadData("components/"+id+".html"+suffix,function(text){
-                // console.log("component",id);
                 callback(text);
                 var e=document.createElement("div");
                 e.id="component-"+id;
@@ -127,16 +123,15 @@ var vueData={
                     }    
                 }
                 
-                     },function(err){
-                     console.log(err);
-                     })
+            },function(err){
+                console.log('load error', err);
+            })
         },
         loadView:function(view){
             var self=this;
             console.log("Load view",view);
             loadData("data/"+view+".json?"+Math.random(),function(text){
                 var json=JSON.parse(text);
-                console.log("json",json,self.contents);
                 self.contents=json;
                 document.title=json.title;
             })

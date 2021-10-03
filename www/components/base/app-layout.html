@@ -1,6 +1,6 @@
 <!-- text-template -->
 <script type="text/x-template" id="app-layout-template">
-    <div class="app-layout" :id="id">
+    <div class="app-layout" :id="id" :style="{fontSize:size+'rem'}">
         <div class="app-header">
             <div class="app-toolbar">
                 <div class="app-menu" v-if="menu">
@@ -8,6 +8,7 @@
                 </div>
                 <div class="app-title">Shopping Cart</div>
                 <div class="app-buttons">
+                    <div><span class="material-icons" v-if="items.length" @click="clear()" :title="'Clear list'">delete_sweep</span></div>
                     <div><span class="material-icons" v-if="actions.length" @click="undo()" :title="'Undo '+actions[actions.length-1].action">undo</span></div>
                     <div><span class="material-icons" :inactive="!sorted" title="Sort items" @click="sorted=!sorted">sort_by_alpha</span></div>
                 </div>
@@ -44,6 +45,7 @@
             return {
                 menu: false,
                 sorted: false,
+                size: 1.5,
                 items: [],
                 actions: []
             }
@@ -88,7 +90,11 @@
         },
         methods: {
             undo: function () {
-                console.log(this.$refs.content.undo())
+                this.$refs.content.undo()
+            },
+            clear: function () {
+                this.actions = []
+                this.items = []
             }
         }
     });
@@ -133,6 +139,9 @@ body[scrolling='1'] .player-top{
 }
 .app-toolbar .app-title{
     flex-basis: 50%;
+    line-height: 1.4em;
+    white-space: nowrap;
+    overflow: hidden;
 }
 .app-buttons{
     display: flex;
@@ -140,8 +149,8 @@ body[scrolling='1'] .player-top{
     flex: 1;
 }
 .app-buttons > div{
-    margin-left: 8px;
-    margin-right: 4px;
+    margin-left: 12px;
+    margin-right: 8px;
     cursor: pointer;
 }
 .app-message{
@@ -193,7 +202,12 @@ body[scrolling='1'] .player-top{
     border-radius: 5px;
     position: relative;
 }
-
+@media (prefers-color-scheme: dark) {
+    .app-layout{
+        background-color: #333;
+        color: #fff;
+    }
+}
 @media (max-width:480px){
     .app-message{
         font-size: 14px;
