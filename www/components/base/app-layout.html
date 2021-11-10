@@ -6,7 +6,7 @@
                 <div class="app-menu" v-if="menu">
                     <span class="material-icons" @click="showPlaylists()">menu</span>
                 </div>
-                <div class="app-title">Shopping Cart</div>
+                <div class="app-title" @click="editTitle($event)"><span v-if="tmpTitle==null" @click="editTitle(true)">{{appTitle}}</span><span v-if="tmpTitle" @input="titleChanged($event)" @blur="editTitle(false)" contenteditable>{{tmpTitle}}</span></div>
                 <div class="app-buttons">
                     <div><span class="material-icons" v-if="items.length" @click="clear()" :title="'Clear list'">delete_sweep</span></div>
                     <div><span class="material-icons" v-if="actions.length" @click="undo()" :title="'Undo '+actions[actions.length-1].action">undo</span></div>
@@ -38,7 +38,32 @@
             el.className='app-message';
         },5000)
     }
-    
+
+    window.getDeviceCode = function(create){
+        var deviceCode = localStorage.getItem('device_code');
+        var self = this
+        if (!deviceCode || deviceCode=='') {
+            deviceCode = 'sh'+Math.random()*1000000+Math.random()*1000000;
+            localStorage.setItem('device_code', deviceCode);
+        }
+        if (create){
+            apiRequest('shoppinglist/lists',{
+            "id": deviceCode,
+            "name": "Shopping List"
+            },'POST',function(result){ 
+                console.log('register',result) 
+            })
+        }
+        if (document.location.hash.length>1){
+            deviceCode = document.location.hash.replace('#','')
+        } else {
+            document.location='#'+deviceCode
+        }
+        return deviceCode
+    }
+
+    var defaultList = {}
+
     Vue.component('app-layout', {
         template: '#app-layout-template',
         data: function(){
@@ -47,7 +72,9 @@
                 sorted: false,
                 size: 1.5,
                 items: [],
-                actions: []
+                actions: [],
+                tmpTitle: null,
+                appTitle: 'Shopping List'
             }
         },
         props: { 
@@ -60,7 +87,7 @@
             var self = this
             var keyUpHandler = function(evt) {
             }
-            window.addEventListener('keyup', keyUpHandler);        
+            window.addEventListener('keyup', keyUpHandler);
         },
         mounted:function(){
             window.app=this;
@@ -83,12 +110,47 @@
             if (itemData && itemData != '') {
                 this.items = JSON.parse(itemData)
             }
+            var deviceCode = getDeviceCode(true)
+            this.updateList();
+            setInterval(this.updateList,10000)
             var itemActions = localStorage.getItem('shoppingcart_actions')
             if (itemActions && itemActions != '') {
                 this.actions = JSON.parse(itemActions)
             }
         },
         methods: {
+            titleChanged: function($ev){
+                var self = this
+                var title = $ev.target.innerText
+                this.appTitle = title
+                var deviceCode = getDeviceCode()
+                apiRequest('shoppinglist/lists/'+deviceCode,{
+                    "name": title
+                },'PUT',function(result){ 
+                    console.log('name',result)
+                })
+            },
+            editTitle: function(editable){
+                if (editable) {
+                    this.tmpTitle = this.appTitle
+                } else {
+                    this.tmpTitle = null
+                }
+            },
+            updateList: function() {
+                var self = this
+                deviceCode = getDeviceCode()
+                apiRequest('shoppinglist/lists/'+deviceCode,null,'GET',function(result){ 
+                    console.log('udpated ',result.success,result.data.name)
+                    if (result.success) {
+                        self.appTitle = result.data.name
+                        apiRequest('shoppinglist/items?list_id='+deviceCode, null,'GET',function(result){
+                            self.items = result.data
+                        })
+                        self.$forceUpdate()
+                    }
+                })                
+            },
             undo: function () {
                 this.$refs.content.undo()
             },

@@ -25,6 +25,7 @@ Vue.component('app-content', {
             nextIndex: 1,
             currentActions: [],
             currentItems: [],
+            listCode: '',
             newItem: {
                 label: ''
             },
@@ -54,6 +55,7 @@ Vue.component('app-content', {
         self.loadIndex(this.items)
         this.$refs.input.focus()
         window.cont = this
+        this.listCode = getDeviceCode()
     },
     methods: {
         loadIndex: function(items){
@@ -70,7 +72,6 @@ Vue.component('app-content', {
                 }
             }
         },
-        
         newAction: function (data){
             this.currentActions.push(data)
             this.$emit('action', this.currentActions)
@@ -89,6 +90,7 @@ Vue.component('app-content', {
         },
         add: function (itemIn, undo) {
             var newItem = JSON.parse(JSON.stringify(itemIn))
+            var self = this
             if (newItem.label.trim() == '') {
                 this.clear()
                 return
@@ -106,6 +108,17 @@ Vue.component('app-content', {
             })
             if (found.length == 0) {
                 this.currentItems.push(newItem)
+                newItem.id = this.listCode+(new Date()).getTime()
+                apiRequest('shoppinglist/items',{
+                    "id": newItem.id,
+                    "list_id": this.listCode,
+                    "label": newItem.label
+                    },'POST',function(result){
+                        if (result.success){
+                            self.save();
+                        }
+                    })
+                this.save()
                 if (!undo){
                     this.newAction({
                         action: 'add',
@@ -139,6 +152,7 @@ Vue.component('app-content', {
         save: function () {
             localStorage.setItem('shoppingcart1', JSON.stringify(this.currentItems))
             localStorage.setItem('shoppingcart_actions', JSON.stringify(this.currentActions))
+
         },
         clear: function () {
             this.newItem.label=''
@@ -157,7 +171,12 @@ Vue.component('app-content', {
                         text: items[0].label
                     })
                 }
+                var itemId = this.currentItems[idx].id
                 this.currentItems.splice(idx, 1)
+                apiRequest('shoppinglist/items/'+itemId,null,
+                    'DELETE',function(result){
+                        console.log('delete', result)
+                    })
                 this.save()
             }
         },
