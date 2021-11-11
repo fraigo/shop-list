@@ -39,22 +39,22 @@
         },5000)
     }
 
-    window.getDeviceCode = function(create){
+    window.getDeviceCode = function(create, force){
         var deviceCode = localStorage.getItem('device_code');
         var self = this
-        if (!deviceCode || deviceCode=='') {
+        if (!deviceCode || deviceCode=='' || force) {
             deviceCode = 'sh'+Math.random()*1000000+Math.random()*1000000;
             localStorage.setItem('device_code', deviceCode);
         }
         if (create){
             apiRequest('shoppinglist/lists',{
             "id": deviceCode,
-            "name": "Shopping List"
+            "name": APPNAME,
             },'POST',function(result){ 
-                console.log('register',result) 
+                console.log('register',result.success) 
             })
         }
-        if (document.location.hash.length>1){
+        if (document.location.hash.length>1 && !force){
             deviceCode = document.location.hash.replace('#','')
         } else {
             document.location='#'+deviceCode
@@ -63,6 +63,7 @@
     }
 
     var defaultList = {}
+    var APPNAME = 'Shopping List'
 
     Vue.component('app-layout', {
         template: '#app-layout-template',
@@ -74,7 +75,7 @@
                 items: [],
                 actions: [],
                 tmpTitle: null,
-                appTitle: 'Shopping List'
+                appTitle: APPNAME
             }
         },
         props: { 
@@ -113,6 +114,7 @@
             var deviceCode = getDeviceCode(true)
             this.updateList();
             setInterval(this.updateList,10000)
+            window.addEventListener("hashchange",this.updateList);
             var itemActions = localStorage.getItem('shoppingcart_actions')
             if (itemActions && itemActions != '') {
                 this.actions = JSON.parse(itemActions)
@@ -123,6 +125,7 @@
                 var self = this
                 var title = $ev.target.innerText
                 this.appTitle = title
+                document.title = APPNAME + ' - ' + self.appTitle
                 var deviceCode = getDeviceCode()
                 apiRequest('shoppinglist/lists/'+deviceCode,{
                     "name": title
@@ -141,9 +144,10 @@
                 var self = this
                 deviceCode = getDeviceCode()
                 apiRequest('shoppinglist/lists/'+deviceCode,null,'GET',function(result){ 
-                    console.log('udpated ',result.success,result.data.name)
+                    console.log('udpated ',deviceCode, result.success,result.data!=null)
                     if (result.success) {
                         self.appTitle = result.data.name
+                        document.title = APPNAME + ' - ' + self.appTitle
                         apiRequest('shoppinglist/items?list_id='+deviceCode, null,'GET',function(result){
                             self.items = result.data
                         })
@@ -157,6 +161,7 @@
             clear: function () {
                 this.actions = []
                 this.items = []
+                getDeviceCode(true, true)
             }
         }
     });
