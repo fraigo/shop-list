@@ -1,12 +1,15 @@
 <!-- text-template -->
 <script type="text/x-template" id="app-layout-template">
-    <div class="app-layout" :id="id" :style="{fontSize:size+'rem'}">
+    <div class="app-layout" :id="id" :style="{fontSize:size+'rem'}" @click="editTitle($event,false)">
         <div class="app-header">
             <div class="app-toolbar">
                 <div class="app-menu" v-if="menu">
                     <span class="material-icons" @click="showPlaylists()">menu</span>
                 </div>
-                <div class="app-title" @click="editTitle($event)"><span v-if="tmpTitle==null" @click="editTitle(true)">{{appTitle}}</span><span v-if="tmpTitle" @input="titleChanged($event)" @blur="editTitle(false)" contenteditable>{{tmpTitle}}</span></div>
+                <div class="app-title">
+                    <span key="t1" v-if="tmpTitle==null" @click.stop="editTitle($event,true)">{{appTitle}}</span>
+                    <span key="t2" v-if="tmpTitle!=null" @click.stop="editTitle($event,true)" @input="titleChanged($event)" @blur="editTitle($event,false)" contenteditable>{{tmpTitle}}</span>
+                </div>
                 <div class="app-buttons">
                     <div><span class="material-icons" v-if="items.length" @click="clear()" :title="'Clear list'">delete_sweep</span></div>
                     <div><span class="material-icons" v-if="actions.length" @click="undo()" :title="'Undo '+actions[actions.length-1].action">undo</span></div>
@@ -157,14 +160,20 @@
                 var title = $ev.target.innerText
                 this.appTitle = title
                 document.title = APPNAME + ' - ' + self.appTitle
-                self.updateList()
+                apiRequest('shoppinglist/list/'+self.listId,{
+                    "name": title
+                },'PUT',function(result){ 
+                    self.updateList()
+                })
             },
-            editTitle: function(editable){
+            editTitle: function(ev, editable){
                 if (editable) {
                     this.tmpTitle = this.appTitle
                 } else {
                     this.tmpTitle = null
                 }
+                this.$forceUpdate()
+                console.log('editTitle',editable, this.tmpTitle)    
             },
             updateHash: function(callback) {
                 var self = this
@@ -307,6 +316,11 @@ body[scrolling='1'] .player-top{
     flex-direction: column;
     border-radius: 5px;
     position: relative;
+}
+[contenteditable]{
+    outline: 0px solid transparent;
+    background-color: #444;
+    padding: 0 8px;
 }
 @media (prefers-color-scheme: dark) {
     .app-layout{
