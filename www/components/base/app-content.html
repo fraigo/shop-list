@@ -1,6 +1,6 @@
 <!-- text-template -->
 <script type="text/x-template" id="app-content-template">
-    <div class="app-content" :id="id">
+    <div class="app-content">
         <div class="input-container" >
             <input autofocus @paste="paste($event)" type="text" ref="input" @keyup="keyup($event)" v-model="newItem.label" >
             <span v-if="newItem.label.length>0" class="material-icons clear-icon" @click="clear()">clear</span>
@@ -25,19 +25,22 @@ Vue.component('app-content', {
             nextIndex: 1,
             currentActions: [],
             currentItems: [],
-            listCode: '',
             newItem: {
                 label: ''
             },
         }
     },
     props: { 
-        "id" : {
-            "type" : String,
-            "default": "comp"+Math.round(Math.random()*10000)
-        },
         "sorted" : {
             "type" : Boolean
+        },
+        "client_id": {
+            "type": String,
+            "default" : ''
+        },
+        "list_id": {
+            "type": String,
+            "default" : 'none'
         },
         "items": {
             "type": Array,
@@ -55,7 +58,6 @@ Vue.component('app-content', {
         self.loadIndex(this.items)
         this.$refs.input.focus()
         window.cont = this
-        this.listCode = getDeviceCode()
     },
     methods: {
         loadIndex: function(items){
@@ -108,13 +110,13 @@ Vue.component('app-content', {
             })
             if (found.length == 0) {
                 this.currentItems.push(newItem)
-                newItem.id = this.listCode+(new Date()).getTime()
                 apiRequest('shoppinglist/items',{
-                    "id": newItem.id,
-                    "list_id": this.listCode,
+                    "client_id": this.client_id,
+                    "list_id": this.list_id,
                     "label": newItem.label
                     },'POST',function(result){
                         if (result.success){
+                            newItem.id = result.newid
                             self.save();
                         }
                     })

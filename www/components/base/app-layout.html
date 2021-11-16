@@ -14,7 +14,7 @@
                 </div>
             </div>
         </div>
-        <div is="app-content" :items="items" :actions="actions" @action="this.actions=$event" ref="content" :sorted="sorted"></div>
+        <div is="app-content" :client_id="clientId" :list_id="listId" :items="items" :actions="actions" @action="this.actions=$event" ref="content" :sorted="sorted"></div>
         <div class="app-message" id="app-message"></div>
         <div class="app-footer"></div>
     </div>
@@ -39,25 +39,27 @@
         },5000)
     }
 
-    window.getDeviceCode = function(create, force){
-        var deviceCode = localStorage.getItem('device_code');
-        var self = this
-        if (!deviceCode || deviceCode=='' || force) {
-            deviceCode = 'sh'+Math.random()*1000000+Math.random()*1000000;
-            localStorage.setItem('device_code', deviceCode);
-        }
+    window.getDeviceCode = function(create,callback){
+        var deviceCode = localStorage.getItem('client_id');
         if (create){
-            apiRequest('shoppinglist/lists',{
-            "id": deviceCode,
-            "name": APPNAME,
-            },'POST',function(result){ 
-                console.log('register',result.success) 
-            })
+            deviceCode = ''
         }
-        if (document.location.hash.length>1 && !force){
+        console.log('getDeviceCode',create,deviceCode)
+        var self = this
+        if (document.location.hash.length>1){
             deviceCode = document.location.hash.replace('#','')
-        } else {
+        }
+        if (!deviceCode || deviceCode=='') {
+            apiRequest('shoppinglist/_clientid',{},"POST",function(result){ 
+                if (result.success) {
+                    localStorage.setItem('client_id',result.data);
+                    document.location='#'+result.data
+                    if (callback) callback(result.data, true);
+                }
+            })
+        } else{
             document.location='#'+deviceCode
+            if (callback) callback(deviceCode);
         }
         return deviceCode
     }
@@ -75,6 +77,8 @@
                 items: [],
                 actions: [],
                 tmpTitle: null,
+                clientId: null,
+                listId: null,
                 appTitle: APPNAME
             }
         },
@@ -91,6 +95,7 @@
             window.addEventListener('keyup', keyUpHandler);
         },
         mounted:function(){
+            console.log('mounted','app-layout')
             window.app=this;
             var self = this;
             var applayout=document.getElementById('applayout');
@@ -111,27 +116,52 @@
             if (itemData && itemData != '') {
                 this.items = JSON.parse(itemData)
             }
-            var deviceCode = getDeviceCode(true)
-            this.updateList();
-            setInterval(this.updateList,10000)
-            window.addEventListener("hashchange",this.updateList);
+            getDeviceCode(true,function(deviceCode,isNew){
+                console.log('device mounted', deviceCode)
+                self.clientId = deviceCode;
+                self.getList(true)
+                setInterval(self.updateList,10000)
+                apiGet("shoppinglist/_clientid/"+self.clientId);
+                window.addEventListener("hashchange",this.updateList);
+            })
             var itemActions = localStorage.getItem('shoppingcart_actions')
             if (itemActions && itemActions != '') {
                 this.actions = JSON.parse(itemActions)
             }
         },
         methods: {
+            getList: function(create){
+                var self = this
+                apiGet('shoppinglist/list/?client_id='+this.clientId,function(result){
+                    if (result.success){
+                        console.log('list', result.data)
+                        self.listId = result.data[0].id
+                        if (!result.data[0] && create){
+                            self.newList()
+                        }
+                        self.updateList()
+                    }
+                })
+            },
+            newList: function() {
+                var self = this
+                apiRequest('shoppinglist/list',{
+                    "client_id": self.clientId,
+                    "name": APPNAME,
+                },'POST',function(result){ 
+                    self.updateList();
+                    if (result.success) {
+                        console.log('created',result)
+                        self.listId = result.newid
+                    }
+                })
+            },
             titleChanged: function($ev){
                 var self = this
                 var title = $ev.target.innerText
                 this.appTitle = title
                 document.title = APPNAME + ' - ' + self.appTitle
-                var deviceCode = getDeviceCode()
-                apiRequest('shoppinglist/lists/'+deviceCode,{
-                    "name": title
-                },'PUT',function(result){ 
-                    console.log('name',result)
-                })
+                self.updateList()
             },
             editTitle: function(editable){
                 if (editable) {
@@ -142,13 +172,12 @@
             },
             updateList: function() {
                 var self = this
-                deviceCode = getDeviceCode()
-                apiRequest('shoppinglist/lists/'+deviceCode,null,'GET',function(result){ 
-                    console.log('udpated ',deviceCode, result.success,result.data!=null)
+                apiRequest('shoppinglist/list/'+self.listId,null,'GET',function(result){ 
+                    console.log('udpated', result.success,result.data!=null)
                     if (result.success) {
                         self.appTitle = result.data.name
                         document.title = APPNAME + ' - ' + self.appTitle
-                        apiRequest('shoppinglist/items?list_id='+deviceCode, null,'GET',function(result){
+                        apiRequest('shoppinglist/items?list_id='+self.listId, null,'GET',function(result){
                             self.items = result.data
                         })
                         self.$forceUpdate()
@@ -161,7 +190,10 @@
             clear: function () {
                 this.actions = []
                 this.items = []
-                getDeviceCode(true, true)
+                getDeviceCode(true,function(){
+                    self.clientId = deviceCode;
+                    self.updateList();
+                })
             }
         }
     });
