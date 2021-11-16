@@ -41,13 +41,12 @@
 
     window.getDeviceCode = function(create,callback){
         var deviceCode = localStorage.getItem('client_id');
-        if (create){
-            deviceCode = ''
-        }
-        console.log('getDeviceCode',create,deviceCode)
         var self = this
         if (document.location.hash.length>1){
             deviceCode = document.location.hash.replace('#','')
+        }
+        if (create){
+            deviceCode = ''
         }
         if (!deviceCode || deviceCode=='') {
             apiRequest('shoppinglist/_clientid',{},"POST",function(result){ 
@@ -116,14 +115,10 @@
             if (itemData && itemData != '') {
                 this.items = JSON.parse(itemData)
             }
-            getDeviceCode(true,function(deviceCode,isNew){
-                console.log('device mounted', deviceCode)
-                self.clientId = deviceCode;
-                self.getList(true)
+            this.updateHash(function(deviceCode,isNew){
                 setInterval(self.updateList,10000)
-                apiGet("shoppinglist/_clientid/"+self.clientId);
-                window.addEventListener("hashchange",this.updateList);
             })
+            window.addEventListener("hashchange",this.updateHash);
             var itemActions = localStorage.getItem('shoppingcart_actions')
             if (itemActions && itemActions != '') {
                 this.actions = JSON.parse(itemActions)
@@ -135,11 +130,12 @@
                 apiGet('shoppinglist/list/?client_id='+this.clientId,function(result){
                     if (result.success){
                         console.log('list', result.data)
-                        self.listId = result.data[0].id
                         if (!result.data[0] && create){
                             self.newList()
+                        } else {
+                            self.listId = result.data[0].id
+                            self.updateList()
                         }
-                        self.updateList()
                     }
                 })
             },
@@ -152,7 +148,7 @@
                     self.updateList();
                     if (result.success) {
                         console.log('created',result)
-                        self.listId = result.newid
+                        self.listId = ""+result.newid
                     }
                 })
             },
@@ -169,6 +165,19 @@
                 } else {
                     this.tmpTitle = null
                 }
+            },
+            updateHash: function(callback) {
+                var self = this
+                getDeviceCode(false,function(deviceCode,isNew){
+                    self.clientId = deviceCode;
+                    self.getList(true)
+                    apiGet("shoppinglist/_clientid/"+self.clientId,function(res){
+                        console.log('client_id',res);
+                    });
+                    if (typeof callback == 'function'){
+                        callback()
+                    }
+                })
             },
             updateList: function() {
                 var self = this
@@ -188,12 +197,10 @@
                 this.$refs.content.undo()
             },
             clear: function () {
+                var self = this
                 this.actions = []
                 this.items = []
-                getDeviceCode(true,function(){
-                    self.clientId = deviceCode;
-                    self.updateList();
-                })
+                self.updateHash()
             }
         }
     });
