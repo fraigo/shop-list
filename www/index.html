@@ -43,7 +43,9 @@
     </div>
     <script >
         APIURL='https://etlapi.com/api/api.php/';
-        APIURL='http://localhost:8001/api.php/';
+        if (document.location.hostname=='localhost'){
+            APIURL='http://localhost:8001/api.php/';
+        }
         APIKEY='e7a9d381352afb6f85a5ebfbd5e6a0a2';
     </script>
     <script src="https://etlapi.com/api/client/client.js"></script>
