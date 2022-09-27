@@ -133,6 +133,7 @@
                 apiGet('shoppinglist/list/?client_id='+this.clientId,function(result){
                     if (result.success){
                         console.log('list', result.data)
+                        self.listId = null
                         if (!result.data[0] && create){
                             self.newList()
                         } else {
@@ -144,11 +145,16 @@
             },
             newList: function() {
                 var self = this
+                if (self.waitingForList){
+                    return
+                }
+                self.waitingForList = true
                 apiRequest('shoppinglist/list',{
                     "client_id": self.clientId,
                     "name": APPNAME,
                 },'POST',function(result){ 
                     self.updateList();
+                    self.waitingForList = false;
                     if (result.success) {
                         console.log('created',result)
                         self.listId = ""+result.newid
