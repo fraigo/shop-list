@@ -56,7 +56,7 @@
                 if (result.success) {
                     localStorage.setItem('client_id',result.data);
                     document.location='#'+result.data
-                    if (callback) callback(result.data, true);
+                    if (callback) callback(''+result.data, true);
                 }
             })
         } else{
