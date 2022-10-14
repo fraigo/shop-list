@@ -250,6 +250,8 @@
     display: flex;
     line-height: 32px;
     padding: 8px 12px;
+    background-color: rgba(0,0,0,0.3);
+    box-shadow: 0px 0px 3px 5px rgba(128,128,128,0.3);
 }
 body[scrolling='1'] .player-top{
     padding-bottom: 4px;
@@ -329,7 +331,7 @@ body[scrolling='1'] .player-top{
     padding: 0 8px;
 }
 @media (prefers-color-scheme: dark) {
-    .app-layout{
+    .app-layout, .default-colors{
         background-color: #333;
         color: #fff;
     }
