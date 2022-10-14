@@ -109,7 +109,6 @@ Vue.component('app-content', {
                 return itemFound
             })
             if (found.length == 0) {
-                this.currentItems.push(newItem)
                 apiRequest('shoppinglist/items',{
                     "client_id": this.client_id,
                     "list_id": this.list_id,
@@ -119,14 +118,15 @@ Vue.component('app-content', {
                             newItem.id = result.newid
                             self.save();
                         }
-                    })
-                this.save()
-                if (!undo){
-                    this.newAction({
-                        action: 'add',
-                        id: newItem.id
-                    })
-                }
+                        self.currentItems.push(newItem)
+                        self.save()
+                        if (!undo){
+                            self.newAction({
+                                action: 'add',
+                                id: newItem.id
+                            })
+                        }
+                })
             } else {
                 var foundItem = this.currentItems[foundIdx]
                 foundItem.replaced = true
@@ -278,10 +278,16 @@ Vue.component('app-content', {
     font-size: 1.2em;
     padding-left: 8px;
 }
-.itemlist-enter-active, .itemlist-leave-active {
-  transition: opacity .3s;
+.itemlist-enter-active {
+  transition: opacity .5s;
 }
-.itemlist-enter, .itemlist-leave-to /* .fade-leave-active below version 2.1.8 */ {
+.itemlist-leave-active {
+  transition: opacity .1s;
+}
+.itemlist-enter {
+  opacity: 0;
+}
+.itemlist-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;
 }
 </style>
